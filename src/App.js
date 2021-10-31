@@ -1,25 +1,19 @@
-import logo from './logo.svg';
-import './App.css';
+import logo from "./logo.svg";
+import "./App.css";
+import Board from "./components/Board";
+import MusicRecommend from "./components/MusicRecommend";
+import dotenv from "dotenv";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+	dotenv.config();
+	const key = process.env.MAP_KEY;
+
+	return (
+		<div className="App">
+			<Board key={key}></Board>
+			<MusicRecommend></MusicRecommend>
+		</div>
+	);
 }
 
 export default App;
