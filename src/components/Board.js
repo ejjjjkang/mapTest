@@ -6,6 +6,7 @@ export default function Board(props) {
 	const [latitude, setLatitude] = useState(0);
 	const [longitude, setLongitude] = useState(0);
 	const mapRef = useRef();
+	const firstUpdate = useRef(true);
 
 	//map
 	// const player = new Tone.Player(
@@ -22,16 +23,21 @@ export default function Board(props) {
 	async function getMap() {
 		const kakao = window.kakao;
 		console.log(kakao);
-		const locPosition = new kakao.maps.LatLng(latitude, longitude);
+		const locPosition = await new kakao.maps.LatLng(latitude, longitude);
 		const options = {
 			//지도를 생성할 때 필요한 기본 옵션
 			center: locPosition, //지도의 중심좌표.
 			level: 3, //지도의 레벨(확대, 축소 정도)
 		};
-		updateLocation(options, locPosition, kakao);
+		await updateLocation(options, locPosition, kakao);
 	}
 
 	useEffect(() => {
+		//when we want to run useEffect in the first rendering..
+		if (firstUpdate.current) {
+			firstUpdate.current = false;
+			return;
+		}
 		getMap();
 	}, [getMap, mapRef]);
 
@@ -75,9 +81,9 @@ export default function Board(props) {
 
 	const loadLocation = () => {
 		navigator.geolocation.getCurrentPosition(function (position) {
-			console.log("Latitude is :", position.coords.latitude);
+			// console.log("Latitude is :", position.coords.latitude);
 			setLatitude(position.coords.latitude);
-			console.log("Longitude is :", position.coords.longitude);
+			// console.log("Longitude is :", position.coords.longitude);
 			setLongitude(position.coords.longitude);
 		});
 	};
