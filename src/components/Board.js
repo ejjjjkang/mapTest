@@ -8,18 +8,6 @@ export default function Board(props) {
 	const mapRef = useRef();
 	const firstUpdate = useRef(true);
 
-	//map
-	// const player = new Tone.Player(
-	// 	process.env.PUBLIC_URL + "strolling.mp3",
-	// ).toDestination();
-	// player.autostart = true;
-	// const synth = new Tone.Synth().toDestination();
-	// synth.triggerAttackRelease("C4", "8n");
-
-	// const pressPlay = async () => {
-	// 	await Tone.start();
-	// 	console.log("audio is ready");
-	// };
 	async function getMap() {
 		const kakao = window.kakao;
 		console.log(kakao);
@@ -43,26 +31,26 @@ export default function Board(props) {
 
 	const updateLocation = (options, locPosition, kakao) => {
 		const map_ = new kakao.maps.Map(mapRef.current, options);
-		setInterval(() => {
-			console.log("I am driving");
-			loadLocation();
+		// setInterval(() => {
+		// 	console.log("I am driving");
+		// 	loadLocation();
 
-			if (latitude !== 0 && longitude !== 0) {
-				const marker = new kakao.maps.Marker({
-					position: locPosition,
-				});
-				marker.setMap(map_);
-			}
+		// 	if (latitude !== 0 && longitude !== 0) {
+		// 		const marker = new kakao.maps.Marker({
+		// 			position: locPosition,
+		// 		});
+		// 		marker.setMap(map_);
+		// 	}
 
-			var iwContent = `<div style="padding:5px;">Let's driving! </div>`;
+		// 	var iwContent = `<div style="padding:5px;">Let's driving! </div>`;
 
-			// const infowindow = new kakao.maps.InfoWindow({
-			// 	map: map_,
-			// 	position: locPosition,
-			// 	content: iwContent,
-			// 	removable: true,
-			// });
-		}, 5000);
+		// 	// const infowindow = new kakao.maps.InfoWindow({
+		// 	// 	map: map_,
+		// 	// 	position: locPosition,
+		// 	// 	content: iwContent,
+		// 	// 	removable: true,
+		// 	// });
+		// }, 5000);
 
 		// return () => clearInterval(getLocation);
 	};
