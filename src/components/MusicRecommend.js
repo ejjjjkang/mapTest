@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
 import * as Tone from "tone";
 
+const song = [
+	{
+		music: "a",
+		info: "song",
+	},
+	{
+		music: "b",
+		info: "effect",
+	},
+];
+
 export default function MusicRecommend() {
-	const [music, setMusic] = useState(null);
-	const [start, setStart] = useState(false);
+	const [music, setMusic] = useState([]);
+	const [start, setStart] = useState(true);
 
 	useEffect(() => {
-		if (music !== null) {
-			const currentMusic = new Tone.Player(music, () => {
+		if (music !== null && start == false) {
+			const currentMusic = new Tone.Player(music[0], () => {
 				currentMusic.sync();
 				currentMusic.start(0);
 				currentMusic.stop(10);
@@ -21,7 +32,7 @@ export default function MusicRecommend() {
 
 			currentMusic.connect(currentChannel);
 
-			const currentMusic2 = new Tone.Player(music, () => {
+			const currentMusic2 = new Tone.Player(music[1], () => {
 				currentMusic2.sync();
 				currentMusic2.start(5);
 				currentMusic2.stop(30);
@@ -36,6 +47,8 @@ export default function MusicRecommend() {
 			currentMusic2.connect(currentChannel2);
 
 			Tone.Transport.start();
+		} else {
+			Tone.Transport.stop();
 		}
 	});
 
@@ -44,14 +57,21 @@ export default function MusicRecommend() {
 			Tone.context.resume();
 			Tone.Transport.start();
 		}
-		const player = process.env.PUBLIC_URL + "strolling.mp3";
+		const player1 = process.env.PUBLIC_URL + "strolling.mp3";
+		const player2 = process.env.PUBLIC_URL + "rain.wav";
+		setStart(!start);
 
-		setMusic(player);
+		setMusic([player1, player2]);
+		console.log(start);
 	};
 
 	return (
 		<div>
-			<button onClick={() => pressPlay()}>Play button</button>
+			{start ? (
+				<button onClick={() => pressPlay()}>Play button</button>
+			) : (
+				<button onClick={() => pressPlay()}>Stop</button>
+			)}
 		</div>
 	);
 }
