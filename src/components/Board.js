@@ -2,11 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
+	position: relative;
+	width: 100%;
+`;
+
+const MenuWrapper = styled.div`
+	position: absolute;
+	z-index: 10;
+`;
+
+const MapWrapper = styled.div`
 	width: 100%;
 	height: 500px;
 `;
-
-const MenuWrapper = styled.div``;
 
 function UseInterval(callback, delay) {
 	const savedCallback = useRef();
@@ -75,6 +83,7 @@ export default function Mapwindow(params) {
 			},
 		},
 	]);
+
 	const [share, setShare] = useState(false);
 	const [sharePlace, setSharePlace] = useState([
 		{
@@ -102,6 +111,7 @@ export default function Mapwindow(params) {
 	var kakao = window.kakao;
 	var map;
 	var locPosition;
+	var geocoder;
 
 	const setMap = () => {
 		locPosition = new kakao.maps.LatLng(lat_, lng_);
@@ -110,15 +120,19 @@ export default function Mapwindow(params) {
 			level: 3,
 		};
 		map = new kakao.maps.Map(mapPlace.current, options);
+		geocoder = new kakao.maps.services.Geocoder();
 	};
 
-	const getMarker = () => {
+	const setCurrentMarker = (position) => {
 		const currentMarker = new kakao.maps.Marker({
-			position: locPosition,
+			map: map,
+			position: position,
 		});
 		const customOverlay = new kakao.maps.CustomOverlay({
-			position: locPosition,
-			content: `<div className ="label" style="color:blue; background-color:white;"><span class="left"></span><span class="center">${"현재 위치"}</span><span class="right"></span></div>`,
+			position: position,
+			content: `<div className ="label" style="color:blue; background-color:white;"><span class="left"></span><span class="center">${
+				position == locPosition ? "현재 위치" : null
+			}</span><span class="right"></span></div>`,
 		});
 		currentMarker.setMap(map);
 		customOverlay.setMap(map);
@@ -128,29 +142,52 @@ export default function Mapwindow(params) {
 	//loadkeep
 	const onLoadKeep = (e) => {
 		if (keep == false) {
-			setMarker(map);
+			setKeepMarkers(map);
 			setKeep(!keep);
 		} else {
-			setMarker(null);
+			setKeepMarkers(null);
 			setKeep(!keep);
 		}
 	};
 
-	const setMarker = () => {
+	const setKeepMarkers = () => {
 		for (let i = 0; i < keepPlace.length; i++) {
 			const { lat, lng } = keepPlace[i].coords;
 			const mark_ = new kakao.maps.LatLng(lat, lng);
 			const newMarker = new kakao.maps.Marker({
+				map: map,
 				position: mark_,
 			});
 			const customOverlayKeep = new kakao.maps.CustomOverlay({
 				position: mark_,
 				content: `<div className ="label" style="color:blue; background-color:white;"><span class="left"></span><span class="center">${keepPlace[i].name}</span><span class="right"></span></div>`,
 			});
+
+			const infoWindow = new kakao.maps.InfoWindow({
+				content: `<div>${keepPlace[i].name}</div>`,
+			});
+
+			kakao.maps.event.addListener(
+				newMarker,
+				"mouseover",
+				makeOverListener(map, newMarker, infoWindow),
+			);
 			newMarker.setMap(map);
 			customOverlayKeep.setMap(map);
 		}
 	};
+
+	function makeOverListener(map, marker, infowindow) {
+		return function () {
+			infowindow.open(map, marker);
+		};
+	}
+
+	function makeOutListener(infowindow) {
+		return function () {
+			infowindow.close();
+		};
+	}
 
 	const onClickKeep = (list) => {
 		const keepPlaceResult = keepPlace.find((place) => place.name == list);
@@ -164,11 +201,43 @@ export default function Mapwindow(params) {
 			position: keepLocation,
 			content: `<div className ="label" style="color:blue; background-color:white;"><span class="left"></span><span class="center">${list}</span><span class="right"></span></div>`,
 		});
+		const infoWindow = new kakao.maps.InfoWindow({
+			content: `<div>${list}</div>`,
+		});
+
+		kakao.maps.event.addListener(
+			newMarker,
+			"mouseover",
+			makeOverListener(map, newMarker, infoWindow),
+		);
+
+		kakao.maps.event.addListener(
+			newMarker,
+			"mouseout",
+			makeOutListener(infoWindow),
+		);
 
 		newMarker.setMap(map);
 		customOverlayKeep.setMap(map);
 		map.setCenter(keepLocation);
 	};
+
+	const onClickGeocoder = () => {
+		searchDetailAddrFromCoords(locPosition, function (result, status) {
+			if (status === kakao.maps.services.Status.OK) {
+				const detailAddr = !!result[0].address
+					? "<div>도로명주소 : " + result[0].address.address_name + "</div>"
+					: "";
+
+				console.log(detailAddr);
+			}
+		});
+	};
+
+	function searchDetailAddrFromCoords(coords, callback) {
+		// 좌표로 법정동 상세 주소 정보를 요청합니다
+		geocoder.coord2Address(coords.getLng(), coords.getLat(), callback);
+	}
 
 	//load destination
 	//TODO: Need to revise
@@ -219,7 +288,7 @@ export default function Mapwindow(params) {
 			setLog(position.coords.longitude);
 		});
 		setMap();
-		getMarker();
+		setCurrentMarker(locPosition);
 	}, [setMap]);
 
 	//이동시
@@ -239,11 +308,10 @@ export default function Mapwindow(params) {
 
 	return (
 		<div>
-			<div>
-				<Wrapper className="map" ref={mapPlace}></Wrapper>
-
+			<Wrapper>
 				<MenuWrapper>
 					{/* <button onClick={onClickEvent}>Load Map</button> */}
+					<button onClick={onClickGeocoder}>주변과 관련된 영상 찾아보기</button>
 					<button onClick={onLoadKeep}>Keep {keepPlace.length} 개</button>
 					<button onClick={onLoadSharePicture}>
 						공유 풍경 {keepPlace.length}
@@ -260,7 +328,8 @@ export default function Mapwindow(params) {
 					</div>
 					<button onClick={onLoadCurrent}>현재 위치</button>
 				</MenuWrapper>
-			</div>
+				<MapWrapper className="map" ref={mapPlace}></MapWrapper>
+			</Wrapper>
 		</div>
 	);
 }
